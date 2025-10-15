@@ -13,17 +13,24 @@ export function links() {
       async headers() {
         const headers = new Headers();
         
-        // Get the current user's token for auth
+        // Get the current user's token for auth with better error handling
         try {
           const auth = getAuth(app);
           const user = auth.currentUser;
           
           if (user) {
-            const token = await user.getIdToken();
-            headers.append("Authorization", `Bearer ${token}`);
+            // Force refresh the token to avoid expired token issues
+            const token = await user.getIdToken(true);
+            if (token) {
+              headers.append("Authorization", `Bearer ${token}`);
+              console.log("[tRPC] Auth token added to request");
+            }
+          } else {
+            console.warn("[tRPC] No authenticated user found");
           }
         } catch (error) {
-          console.error("Error getting auth token:", error);
+          console.error("[tRPC] Error getting auth token:", error);
+          // Don't add authorization header if there's an error
         }
         
         return {
@@ -32,4 +39,4 @@ export function links() {
       },
     }),
   ];
-} 
+}

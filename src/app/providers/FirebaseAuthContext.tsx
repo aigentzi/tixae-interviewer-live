@@ -15,18 +15,28 @@ export const FirebaseAuthProvider = (props: { children: React.ReactNode }) => {
     const auth = getAuth(app);
 
     const unsub = onAuthStateChanged(auth, async (user) => {
-      console.log("!VGDEBUG:AUTH:CHANGE", user);
+      console.log("[Auth] Auth state changed:", user?.uid ? 'User logged in' : 'User logged out');
+      
       if (user?.email) {
-        setGAuthUser({
-          uid: user.uid,
-          email: user.email || "",
-          displayName: user.displayName || "",
-          photoURL: user.photoURL || "",
-        });
-        const authToken = await user.getIdToken();
-        setCookie("auth-token", authToken, {
-          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-        });
+        try {
+          setGAuthUser({
+            uid: user.uid,
+            email: user.email || "",
+            displayName: user.displayName || "",
+            photoURL: user.photoURL || "",
+          });
+          
+          // Get a fresh token to ensure it's valid
+          const authToken = await user.getIdToken(true);
+          setCookie("auth-token", authToken, {
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+          });
+          
+          console.log("[Auth] User authenticated successfully:", user.uid);
+        } catch (error) {
+          console.error("[Auth] Error setting up authenticated user:", error);
+          setGAuthUser(null);
+        }
 
         // create new user if not exists
 

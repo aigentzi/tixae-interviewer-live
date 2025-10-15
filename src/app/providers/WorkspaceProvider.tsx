@@ -27,9 +27,18 @@ export function WorkspaceProvider(props: { children: React.ReactNode }) {
   const {
     data: workspacesData,
     isLoading,
+    error: workspacesError,
     refetch: refetchWorkspaces,
   } = api.workspace.getByUserId.useQuery(undefined, {
-    enabled: !!gauthUser,
+    enabled: !!gauthUser?.uid && !gauthUser?.gauthLoading,
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors, but retry on network errors
+      if (error?.data?.code === 'UNAUTHORIZED') {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const createWorkspace = api.workspace.create.useMutation({
@@ -97,15 +106,26 @@ export function WorkspaceProvider(props: { children: React.ReactNode }) {
 
   // Auto-create workspace for users who don't have any (with duplicate prevention)
   useEffect(() => {
+    // Check for authentication errors first
+    if (workspacesError?.data?.code === 'UNAUTHORIZED') {
+      console.error("Authentication failed for workspace query:", workspacesError);
+      setNotification({
+        type: "error",
+        message: "Authentication failed. Please try logging in again.",
+      });
+      return;
+    }
+
     if (
       userHasNoWorkspaces &&
       !isCreatingWorkspace &&
       !createWorkspace.isPending &&
       !hasAttemptedAutoCreate && // Prevent multiple attempts
       gauthUser?.uid && // Ensure user is loaded
-      gauthUser?.displayName // Ensure displayName is loaded to prevent duplicates
+      gauthUser?.displayName && // Ensure displayName is loaded to prevent duplicates
+      !workspacesError // Don't create if there are errors
     ) {
-      console.log("User has no workspaces, creating default workspace...");
+      console.log("[Workspace] User has no workspaces, creating default workspace...");
 
       const workspaceName = `${gauthUser.displayName}'s Workspace`;
 
@@ -140,6 +160,7 @@ export function WorkspaceProvider(props: { children: React.ReactNode }) {
     createWorkspace.isPending,
     hasAttemptedAutoCreate,
     createWorkspace.isError, // Add this to prevent retries after errors
+    workspacesError, // Include workspacesError in dependencies
   ]);
 
   useEffect(() => {
@@ -153,23 +174,46 @@ export function WorkspaceProvider(props: { children: React.ReactNode }) {
     setStoredWorkspace(workspace);
   };
 
+  // Improve the loading logic to prevent infinite loops  
+  const isWorkspaceLoading = isLoading || isCreatingWorkspace ||
+    (workspacesData && !activeWorkspaceState && workspacesData.workspaces.length > 0);
+  
+  // Add a timeout to prevent infinite loading
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  useEffect(() => {
+    if (isWorkspaceLoading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 10000); // 10 second timeout
+      return () => clearTimeout(timer);
+    }
+  }, [isWorkspaceLoading]);
+
   const contextValue = {
     activeWorkspace: activeWorkspaceState,
     setActiveWorkspace,
-    loading:
-      isLoading ||
-      isCreatingWorkspace ||
-      (workspacesData &&
-        !activeWorkspaceState &&
-        workspacesData.workspaces.length > 0),
+    loading: isWorkspaceLoading && !loadingTimeout,
     workspaces: workspacesData?.workspaces || [],
     refetchWorkspaces,
     createWorkspace,
   };
 
-  // Show loading screen while creating workspace
+  // Show loading screen while creating workspace with improved timeout
   if (contextValue.loading) {
-    return <UnifiedLoadingScreen stage="workspace" />;
+    return <UnifiedLoadingScreen stage="workspace" />
+  } 
+  
+  // Show error notification if we hit the loading timeout
+  if (loadingTimeout && isWorkspaceLoading) {
+    return (
+      <WorkspaceContext.Provider value={contextValue as any}>
+        <InlineNotification
+          type="error"
+          message="Loading your workspace is taking longer than expected. Please refresh the page or try again later."
+        />
+        {props.children}
+      </WorkspaceContext.Provider>
+    );
   }
 
   return (
