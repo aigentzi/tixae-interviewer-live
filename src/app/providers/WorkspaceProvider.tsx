@@ -10,7 +10,7 @@ import { UnifiedLoadingScreen } from "../components/UnifiedLoadingScreen";
 import InlineNotification from "@root/app/components/InlineNotification";
 
 export function WorkspaceProvider(props: { children: React.ReactNode }) {
-  const { gauthUser } = useGAuth();
+  const { gauthUser, gauthLoading } = useGAuth();
   const [activeWorkspaceState, setActiveWorkspaceState] =
     useState<Workspace | null>(null);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
@@ -30,7 +30,7 @@ export function WorkspaceProvider(props: { children: React.ReactNode }) {
     error: workspacesError,
     refetch: refetchWorkspaces,
   } = api.workspace.getByUserId.useQuery(undefined, {
-    enabled: !!gauthUser?.uid && !gauthUser?.gauthLoading,
+    enabled: !!gauthUser?.uid && !gauthLoading,
     retry: (failureCount, error) => {
       // Don't retry on auth errors, but retry on network errors
       if (error?.data?.code === 'UNAUTHORIZED') {

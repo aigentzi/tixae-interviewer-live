@@ -24,7 +24,7 @@ export const traverseProducts = async (query: string, limit: number = 100) => {
   let hasMore = true;
   let nextPage: string | null = null;
 
-  let productsResponse = await stripeService.searchProducts({
+  let productsResponse = await stripeService().searchProducts({
     query,
     limit,
   });
@@ -33,7 +33,7 @@ export const traverseProducts = async (query: string, limit: number = 100) => {
   nextPage = productsResponse.next_page;
 
   while (hasMore && nextPage) {
-    productsResponse = await stripeService.searchProducts({
+    productsResponse = await stripeService().searchProducts({
       query,
       limit,
       page: nextPage,
@@ -70,7 +70,7 @@ export const formatStripeProductToAddon = async (
 ): Promise<StripeProductAddonModel> => {
   const prices = inputPrices?.length > 0
     ? inputPrices
-    : await stripeService.getPriceForProduct(product.id, currency).then(res => res.data);
+    : await stripeService().getPriceForProduct(product.id, currency).then(res => res.data);
   const addonKey = product.metadata.addon_key_ref as StripeProductAddonModel["key"];
 
   return {
@@ -114,7 +114,7 @@ export const formatStripeProductToPlan = async (
 ): Promise<StripeCustomPlanModel> => {
   const prices = inputPrices?.length > 0
     ? inputPrices
-    : await stripeService.getPriceForProduct(product.id, currency).then(res => res.data);
+    : await stripeService().getPriceForProduct(product.id, currency).then(res => res.data);
 
   return {
     billingCycle: "monthly",
@@ -273,7 +273,7 @@ export const tryChargeCustomerAmount = async (input: {
   customerEmail: string;
 }): Promise<Stripe.Invoice> => {
   // 1. Create an invoice item for a one-time custom amount
-  const invoiceItem = await stripeService.createInvoiceItem({
+  const invoiceItem = await stripeService().createInvoiceItem({
     customer: input.customerId,
     amount: input.amount,
     currency: input.currency,
@@ -281,7 +281,7 @@ export const tryChargeCustomerAmount = async (input: {
   });
 
   // 2. Create the invoice, linking to the existing subscription
-  const invoice = await stripeService.createInvoice({
+  const invoice = await stripeService().createInvoice({
     customer: input.customerId,
     subscription: input.subscriptionId,
     description: input.why || "Additional charge for subscription",
@@ -291,14 +291,14 @@ export const tryChargeCustomerAmount = async (input: {
   let paidInvoice: Stripe.Invoice | null = null;
 
   try {
-    paidInvoice = await stripeService.payInvoice(invoice.id!, ["payment_intent"]);
+    paidInvoice = await stripeService().payInvoice(invoice.id!, ["payment_intent"]);
   } catch (error) {
-    await stripeService.deleteInvoiceItem(invoiceItem.id);
-    await stripeService.deleteInvoice(invoice.id!);
+    await stripeService().deleteInvoiceItem(invoiceItem.id);
+    await stripeService().deleteInvoice(invoice.id!);
     throw error;
   }
 
-  const invoicePermanentLink = await stripeService.retrieveInvoice(paidInvoice.id!);
+  const invoicePermanentLink = await stripeService().retrieveInvoice(paidInvoice.id!);
 
   if (input.customerEmail) {
     sendAntiSpamEmail({
@@ -325,7 +325,7 @@ export const tryChargeCustomerAmount = async (input: {
  */
 export const getVerificationImages = async (sessionId: string): Promise<VerificationImages> => {
   try {
-    const session = await stripeVerificationService.retrieveVerificationSession(sessionId);
+    const session = await stripeVerificationService().retrieveVerificationSession(sessionId);
 
     if (session.status !== "verified") {
       throw new Error("Verification session is not verified");
@@ -337,13 +337,13 @@ export const getVerificationImages = async (sessionId: string): Promise<Verifica
 
     // Get verification report if available
     if (session.last_verification_report) {
-      const report = await stripeVerificationService.retrieveVerificationReport(
+      const report = await stripeVerificationService().retrieveVerificationReport(
         session.last_verification_report as string
       );
 
       const document = report.document as any;
       if (document?.front) {
-        const frontFile = await stripeVerificationService.createFileLink({
+        const frontFile = await stripeVerificationService().createFileLink({
           file: document.front as string,
           expires_at: Math.floor(Date.now() / 1000) + 30,
         });
@@ -351,7 +351,7 @@ export const getVerificationImages = async (sessionId: string): Promise<Verifica
       }
 
       if (document?.back) {
-        const backFile = await stripeVerificationService.createFileLink({
+        const backFile = await stripeVerificationService().createFileLink({
           file: document.back as string,
           expires_at: Math.floor(Date.now() / 1000) + 30,
         });
@@ -362,7 +362,7 @@ export const getVerificationImages = async (sessionId: string): Promise<Verifica
       if (document?.files) {
         for (const file of document.files) {
           console.log("Current document file", file);
-          const fileLink = await stripeVerificationService.createFileLink({
+          const fileLink = await stripeVerificationService().createFileLink({
             file: file as string,
             expires_at: Math.floor(Date.now() / 1000) + 30,
           });
@@ -375,7 +375,7 @@ export const getVerificationImages = async (sessionId: string): Promise<Verifica
       // Extract selfie image
       const selfie = report.selfie as any;
       if (selfie) {
-        const selfieFile = await stripeVerificationService.createFileLink({
+        const selfieFile = await stripeVerificationService().createFileLink({
           file: selfie.document as string,
           expires_at: Math.floor(Date.now() / 1000) + 30,
         });

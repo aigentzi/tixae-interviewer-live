@@ -315,7 +315,7 @@ ${customPrompt}`
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const session = await stripeVerificationService.createVerificationSession(
+      const session = await stripeVerificationService().createVerificationSession(
         {
           verification_flow: "vf_1RRyRCI62q3idEK7OmrmMzWR",
         },

@@ -49,7 +49,7 @@ export const stripeRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const coupon = await stripeService.retrieveCoupon(input.couponCode);
+        const coupon = await stripeService().retrieveCoupon(input.couponCode);
 
         return {
           success: true,
@@ -108,7 +108,7 @@ export const stripeRouter = createTRPCRouter({
 
         console.log(`prices`, prices);
 
-        const previewInvoice = await stripeService.createInvoicePreview({
+        const previewInvoice = await stripeService().createInvoicePreview({
           customer: workspace.data.stripeCustomerId || "",
           currency,
           subscription_items: prices.map(price => ({ price: price.priceId, quantity: price.quantity })),
@@ -170,7 +170,7 @@ export const stripeRouter = createTRPCRouter({
 
         let subscription: Stripe.Subscription | null = null;
         if (input.subscriptionId) {
-          subscription = await stripeService.retrieveSubscription(
+          subscription = await stripeService().retrieveSubscription(
             input.subscriptionId || "",
             ["items.data.price"],
           );
@@ -180,7 +180,7 @@ export const stripeRouter = createTRPCRouter({
         const { additionalAddons } = addonsToAddToPlan(input.plan);
         const subItems = subscription?.items?.data;
 
-        const invoice = await stripeService.createInvoicePreview({
+        const invoice = await stripeService().createInvoicePreview({
           discounts: input.coupon ? [{ coupon: input.coupon }] : undefined,
           currency,
           subscription_items: subItems
@@ -360,7 +360,7 @@ export const stripeRouter = createTRPCRouter({
         }
 
         // 3. Retrieve the current subscription
-        const currentSubscription = await stripeService.retrieveSubscription(
+        const currentSubscription = await stripeService().retrieveSubscription(
           workspace.data.stripeSubscriptionId,
           ["items.data.price", "items.data.plan.product"],
         );
@@ -392,11 +392,11 @@ export const stripeRouter = createTRPCRouter({
         ];
 
         // 6. Calculate the new price & old price & the difference
-        const previewInvoiceForOldPlan = await stripeService.createInvoicePreview({
+        const previewInvoiceForOldPlan = await stripeService().createInvoicePreview({
           customer: workspace.data.stripeCustomerId as string,
           subscription: currentSubscription.id,
         });
-        const previewInvoiceForNewPlan = await stripeService.createInvoicePreview({
+        const previewInvoiceForNewPlan = await stripeService().createInvoicePreview({
           customer: workspace.data.stripeCustomerId as string,
           subscription_items: newSubItems,
         });
@@ -433,7 +433,7 @@ export const stripeRouter = createTRPCRouter({
         ];
 
         // 10. Update the subscription with the new items
-        const updatedSubscription = await stripeService.updateSubscription({
+        const updatedSubscription = await stripeService().updateSubscription({
           subscriptionId: currentSubscription.id,
           items: newFinalItems,
         });
@@ -494,7 +494,7 @@ export const stripeRouter = createTRPCRouter({
         // 2. Get the customer
         const customer = workspace.data.stripeCustomerId ? {
           id: workspace.data.stripeCustomerId,
-        } : await stripeService.createCustomer(
+        } : await stripeService().createCustomer(
           ctx.user.email || "",
           ctx.user.displayName || ""
         );
@@ -525,7 +525,7 @@ export const stripeRouter = createTRPCRouter({
         const customPlanId = createId();
 
         // 6. Create the checkout session and create an order
-        const session = await stripeService.createCheckoutSession({
+        const session = await stripeService().createCheckoutSession({
           discounts: input?.couponId
             ? [{ coupon: input?.couponId || "" }]
             : undefined,
@@ -610,7 +610,7 @@ export const stripeRouter = createTRPCRouter({
 
         // 1. Cancel the subscription
         const subscriptionId = workspace.data.stripeSubscriptionId || "";
-        const canceledSubscription = await stripeService.cancelSubscription(subscriptionId);
+        const canceledSubscription = await stripeService().cancelSubscription(subscriptionId);
 
         await db.workspaces.update(workspace.ref.id, {
           stripeSubscriptionId: undefined,
@@ -663,7 +663,7 @@ export const stripeRouter = createTRPCRouter({
         }
 
         // 1. Un-cancel the subscription
-        const unCanceledSubscription = await stripeService.updateSubscription({
+        const unCanceledSubscription = await stripeService().updateSubscription({
           subscriptionId: workspace.data.stripeSubscriptionId || "",
           cancel_at_period_end: false,
           cancel_at: undefined,

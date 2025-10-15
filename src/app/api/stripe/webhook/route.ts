@@ -8,21 +8,40 @@ import { workspace } from "@root/lib/workspace.lib";
 
 // Use STRIPE_MODE for explicit control
 const isLiveMode = process.env.STRIPE_MODE === "live";
-console.log("Webhook using live mode:", isLiveMode);
 
-const stripe = new Stripe(
-  isLiveMode
-    ? process.env.STRIPE_SECRET_KEY!
-    : process.env.STRIPE_SECRET_KEY_TEST!,
-);
-const webhookSecret = isLiveMode
-  ? process.env.STRIPE_WEBHOOK_SECRET
-  : process.env.STRIPE_WEBHOOK_SECRET_TEST!;
+// Lazy-load Stripe client and webhook secret to avoid build-time issues
+let stripe: Stripe | null = null;
+let webhookSecret: string | undefined = undefined;
 
-// Validate environment variables
-if (!webhookSecret) {
-  console.error("Missing Stripe webhook secret environment variable");
-  throw new Error("Stripe webhook secret not configured");
+function getStripeClient() {
+  if (!stripe) {
+    console.log("Webhook using live mode:", isLiveMode);
+    
+    const secretKey = isLiveMode
+      ? process.env.STRIPE_SECRET_KEY
+      : process.env.STRIPE_SECRET_KEY_TEST;
+      
+    if (!secretKey) {
+      throw new Error(`Missing Stripe secret key for ${isLiveMode ? 'live' : 'test'} mode`);
+    }
+    
+    stripe = new Stripe(secretKey);
+  }
+  return stripe;
+}
+
+function getWebhookSecret() {
+  if (webhookSecret === undefined) {
+    webhookSecret = isLiveMode
+      ? process.env.STRIPE_WEBHOOK_SECRET
+      : process.env.STRIPE_WEBHOOK_SECRET_TEST;
+      
+    if (!webhookSecret) {
+      console.error("Missing Stripe webhook secret environment variable");
+      throw new Error("Stripe webhook secret not configured");
+    }
+  }
+  return webhookSecret;
 }
 
 export async function POST(req: NextRequest) {
@@ -41,7 +60,7 @@ export async function POST(req: NextRequest) {
     // Verify webhook signature
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret!);
+      event = getStripeClient().webhooks.constructEvent(body, signature, getWebhookSecret());
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -124,7 +143,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       );
 
       // Get subscription with expanded product data to access metadata
-      const subscription = await stripe.subscriptions.retrieve(
+      const subscription = await getStripeClient().subscriptions.retrieve(
         session.subscription as string,
         { expand: ["items.data.price.product"] },
       );
@@ -211,7 +230,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       let interviewsLimit = 0;
 
       // Retrieve the checkout session with line items expanded
-      const expandedSession = await stripe.checkout.sessions.retrieve(
+      const expandedSession = await getStripeClient().checkout.sessions.retrieve(
         session.id,
         {
           expand: ["line_items.data.price.product"],
@@ -298,7 +317,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     const user = users[0];
 
     // Get subscription with expanded product data to access metadata
-    const expandedSubscription = await stripe.subscriptions.retrieve(
+    const expandedSubscription = await getStripeClient().subscriptions.retrieve(
       subscription.id,
       { expand: ["items.data.price.product"] },
     );
@@ -398,7 +417,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // If this is related to a subscription, handle subscription renewal
   if (subscriptionId) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      const subscription = await getStripeClient().subscriptions.retrieve(subscriptionId, {
         expand: ["items.data.price.product"],
       });
 

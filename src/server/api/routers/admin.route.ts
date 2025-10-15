@@ -471,7 +471,7 @@ export const adminRouter = createTRPCRouter({
             }
 
             try {
-              const subs = await stripeService.getSubscriptions(customerId);
+              const subs = await stripeService().getSubscriptions(customerId);
               const activeSub = subs.data[0];
               if (!activeSub) {
                 const { _stripeCustomerId, ...rest } = u;
@@ -491,7 +491,7 @@ export const adminRouter = createTRPCRouter({
                 };
               }
 
-              const product = await stripeService.getProductData(productId);
+              const product = await stripeService().getProductData(productId);
               const { _stripeCustomerId, ...rest } = u;
               return {
                 ...rest,

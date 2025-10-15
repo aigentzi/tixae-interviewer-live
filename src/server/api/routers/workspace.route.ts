@@ -173,7 +173,7 @@ export const workspaceRouter = createTRPCRouter({
           `Creating workspace for user ${ctx.user.uid}. Existing workspaces: ${existingWorkspaces.length}`,
         );
 
-        const stripeCustomerId = await stripeService.createCustomer(
+        const stripeCustomerId = await stripeService().createCustomer(
           ctx.user.email || "",
           ctx.user.displayName || "",
         );

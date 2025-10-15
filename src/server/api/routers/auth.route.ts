@@ -172,7 +172,7 @@ export const authRouter = createTRPCRouter({
           });
 
           // Create user document in Firestore
-          const stripeCustomer = await stripeService.createCustomer(
+          const stripeCustomer = await stripeService().createCustomer(
             email,
             firebaseUser.displayName || "",
           );
@@ -316,9 +316,9 @@ export const authRouter = createTRPCRouter({
 
       // Get payment methods, customer data, and subscriptions using stripe customer id from user data
       const [paymentMethods, customer, subscriptions] = await Promise.all([
-        stripeService.getPaymentMethods(workspace?.data.stripeCustomerId || ""),
-        stripeService.getCustomerData(workspace?.data.stripeCustomerId || ""),
-        stripeService.getSubscriptions(workspace?.data.stripeCustomerId || ""),
+        stripeService().getPaymentMethods(workspace?.data.stripeCustomerId || ""),
+        stripeService().getCustomerData(workspace?.data.stripeCustomerId || ""),
+        stripeService().getSubscriptions(workspace?.data.stripeCustomerId || ""),
       ]);
 
       // Get internal key ref from subscription items
@@ -329,7 +329,7 @@ export const authRouter = createTRPCRouter({
       ) {
         const productId = subscriptions.data[0].items.data[0].plan
           .product as string;
-        const productData = await stripeService.getProductData(productId);
+        const productData = await stripeService().getProductData(productId);
         internalKeyRef = productData.metadata?.internal_key_ref;
       }
 
@@ -337,7 +337,7 @@ export const authRouter = createTRPCRouter({
       const addonKeysToGetDetailsFor = addonsKeys.options.map((addon) =>
         addon.valueOf(),
       );
-      const products = await stripeService.getProducts({
+      const products = await stripeService().getProducts({
         active: true,
         limit: 10,
       });
@@ -348,7 +348,7 @@ export const authRouter = createTRPCRouter({
           addonKeysToGetDetailsFor.includes(product.metadata.addon_key_ref),
       );
 
-      const payAsYouGoProducts = await stripeService.searchProducts({
+      const payAsYouGoProducts = await stripeService().searchProducts({
         query: `metadata['internal_key_ref']:'pay_as_you_go'`,
       });
 
@@ -363,7 +363,7 @@ export const authRouter = createTRPCRouter({
       // Return all products details (product, prices, keyType, requestedCurrency, availableCurrencies)
       const allProductsDetails = await Promise.all(
         allFilteredProducts.map(async (product) => {
-          const prices = await stripeService.getPriceForProduct(product.id);
+          const prices = await stripeService().getPriceForProduct(product.id);
           const processedPrices = prices.data.map((price) => {
             if (price.currency.toLowerCase() === currency.toLowerCase()) {
               return price;
@@ -693,7 +693,7 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const stripeCustomer = await stripeService.createCustomer(
+      const stripeCustomer = await stripeService().createCustomer(
         email,
         displayName || "",
       );
