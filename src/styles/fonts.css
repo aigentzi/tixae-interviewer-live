@@ -1,0 +1,120 @@
+/* Tixae Font System - Poppins & Lexend */
+
+/* Font Family Utilities */
+.font-poppins {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+}
+
+.font-lexend {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+}
+
+/* Primary Font (Poppins) Classes */
+.font-heading-primary {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.font-heading-secondary {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.font-ui-label {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.font-ui-semibold {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.font-body-text {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Secondary Font (Lexend) Classes */
+.font-brand {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.font-subheading {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.font-modal {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/* Combined Typography Classes */
+.text-h1-poppins {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 3.75rem; /* text-6xl */
+  line-height: 1.2;
+}
+
+.text-h2-poppins {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 3rem; /* text-5xl */
+  line-height: 1.2;
+}
+
+.text-h3-poppins {
+  font-family: var(--font-poppins), "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 2.25rem; /* text-4xl */
+  line-height: 1.3;
+}
+
+.text-brand-title {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 2.25rem; /* text-4xl */
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.text-brand-subtitle {
+  font-family: var(--font-lexend), "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem; /* text-xl */
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .text-h1-poppins {
+    font-size: 2.25rem; /* text-4xl on mobile */
+  }
+
+  .text-h2-poppins {
+    font-size: 1.875rem; /* text-3xl on mobile */
+  }
+
+  .text-h3-poppins {
+    font-size: 1.5rem; /* text-2xl on mobile */
+  }
+
+  .text-brand-title {
+    font-size: 1.875rem; /* text-3xl on mobile */
+  }
+}

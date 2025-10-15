@@ -1,0 +1,27 @@
+services:
+  tixae-interviewer-app:
+    container_name: tixae-interviewer-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.local
+    restart: always
+    ports:
+      - 3030:3030
+    networks:
+      - my_network
+
+  tixae-interviewer-docs:
+    container_name: tixae-interviewer-docs
+    build:
+      context: .
+      dockerfile: docs.Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    external: true

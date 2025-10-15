@@ -1,0 +1,83 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Tixae Interviewer",
+  "colors": {
+    "primary": "#7828c8",
+    "light": "#7828c8",
+    "dark": "#7828c8"
+  },
+  "api": {
+    "playground": {
+      "proxy": false,
+      "display": "interactive"
+    }
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "index"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "openapi": {
+              "source": "api-reference/openapi.json",
+              "directory": "api-reference"
+            }
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Community",
+          "icon": "discord",
+          "href": "https://discord.gg/XrJtBsQQRN"
+        },
+        {
+          "anchor": "Pricing",
+          "icon": "dollar-sign",
+          "href": "https://www.tixaeagents.ai/pricing"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "dark": "/logo/light.png",
+    "light": "/logo/dark.png"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:support@interview.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://interview.ai"
+    }
+  },
+  "footer": {
+    "socials": {
+      "linkedin": "https://linkedin.com/company/tixae-agents",
+      "facebook": "https://facebook.com/tixaeagents",
+      "instagram": "https://instagram.com/tixaeagents.app",
+      "discord": "https://discord.gg/XrJtBsQQRN"
+    }
+  }
+}

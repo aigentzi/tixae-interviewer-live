@@ -1,0 +1,1 @@
+this folder will be shared between the client and the server
