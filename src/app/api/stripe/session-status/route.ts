@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: "incomplete", message: "Order not found" }, { status: 400 });
   }
 
-  const stripeSession = await stripeService.retrieveCheckoutSession(orderData.stripe.sessionId as string);
+  const stripeSession = await stripeService().retrieveCheckoutSession(orderData.stripe.sessionId as string);
   if (!stripeSession) {
     return NextResponse.json({ error: "Stripe session not found" }, { status: 400 });
   }

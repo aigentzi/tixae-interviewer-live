@@ -48,7 +48,14 @@ export class StripeService {
    *     StripeError if the Stripe service cannot be initialized
    */
   constructor(apiKey?: string) {
-    this.stripe = new Stripe(apiKey || process.env.STRIPE_SECRET_KEY!);
+    const key = apiKey || process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      // During build time, environment variables might not be available
+      // Use a placeholder that will be replaced at runtime
+      this.stripe = new Stripe('sk_test_placeholder');
+    } else {
+      this.stripe = new Stripe(key);
+    }
   }
 
   /**
@@ -704,5 +711,24 @@ export class StripeService {
   }
 };
 
-export const stripeService = new StripeService();
-export const stripeVerificationService = new StripeService(process.env.STRIPE_RESTRICTED_KEY!);
+// Lazy-loaded instances to avoid build-time environment variable issues
+let _stripeService: StripeService | null = null;
+let _stripeVerificationService: StripeService | null = null;
+
+export const getStripeService = () => {
+  if (!_stripeService) {
+    _stripeService = new StripeService();
+  }
+  return _stripeService;
+};
+
+export const getStripeVerificationService = () => {
+  if (!_stripeVerificationService) {
+    _stripeVerificationService = new StripeService(process.env.STRIPE_RESTRICTED_KEY!);
+  }
+  return _stripeVerificationService;
+};
+
+// For backward compatibility, export the lazy loaders
+export const stripeService = getStripeService;
+export const stripeVerificationService = getStripeVerificationService;
